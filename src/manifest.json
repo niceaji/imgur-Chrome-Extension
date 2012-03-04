@@ -1,0 +1,15 @@
+{
+	"name": "imgur",
+	"description": "Take screenshots, add images to your imgur account and upload images from your desktop using drag and drop.",
+	"version": "1.1.1",
+	"icons": { "16": "img/logo.ico", "48": "img/logo_48.png", "128": "img/logo.png" },
+	"permissions": ["contextMenus","tabs","notifications", "http://*/*", "https://*/*", "clipboardWrite", "clipboardRead"],
+	"background_page": "background.html",
+	"minimum_chrome_version": "12",
+	"browser_action": { "default_icon": "img/logo.ico"},
+	"options_page": "options.html",
+	"content_scripts": [
+		{"matches": ["https://api.imgur.com/oauth/authorize?oauth_token=*"], "js": ["js/inject/verifier.js"]},
+		{"matches": ["http://*.imgur.com/"], "exclude_matches": ["http://www.imgur.com/"], "js": ["js/inject/albumMonitor.js"]}
+	]
+}

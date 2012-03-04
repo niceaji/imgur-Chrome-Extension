@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="reset-min.css">
+		<link rel="stylesheet" type="text/css" href="style.css" />
+        <script src="http://feather.aviary.com/js/feather.js"></script>
+        <script src="js/chrome_ex_oauthsimple.js"></script>
+		<script src="js/utils.js"></script>
+        <script src="js/model.js"></script>
+        <script src="js/main.js"></script>
+        <script>
+            var _gaq = _gaq || [];
+            _gaq.push(['_setAccount', 'UA-249743-23']);
+            _gaq.push(['_trackPageview']);
+
+            (function () {
+                var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+                ga.src = 'https://ssl.google-analytics.com/ga.js';
+                var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+            })();
+        </script>
+		<title>imgur Extension</title>
+	</head>
+<body>
+
+	<div id="wrap">
+		
+		<header>
+			
+			<hgroup>
+				<h1>imgur</h1>
+				<h2>Extension</h2>
+			</hgroup>
+			<nav id="nav-main">
+                <select id="nav-albums" class="hide"></select>
+				<a href="#" class="btn hide" id="nav-connect">connect to imgur.com</a>
+				<a href="#" class="btn" id="nav-download">download all</a>
+				<a href="#" class="btn" id="nav-delete">delete all</a>
+				<nav id="nav-extension">
+					<a href="#" class="btn" id="nav-options">options</a>
+					<a href="#" class="btn" id="nav-about">about</a>
+				</nav>
+			</nav>
+			
+			
+		</header>
+
+        <div id="albums">
+        </div>
+
+		
+		
+	</div>
+
+	<div id="status-bar">
+		<div class="content"></div>
+		<span>Close</span>
+	</div>
+	
+</body>
+</html>
