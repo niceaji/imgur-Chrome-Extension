@@ -240,17 +240,22 @@ function makeAlbumItem(imageItem) {
 
     img.onload = function () {
     	resizeImage(this);
-    	if (!imageItem.image.animated && model.preferences.get('freezegifs')) {
+    	if (imageItem.image.animated && model.preferences.get('freezegifs')) {
     		var canvas = $$('canvas');
     		canvas.width = this.width;
     		canvas.height = this.height;
     		canvas.style.top = this.style.top;
     		canvas.style.left = this.style.left;
     		canvas.id = this.id;
-    		canvas.getContext('2d').drawImage(this, 0, 0);
+    		canvas.getContext('2d').drawImage(this, 0, 0, this.width, this.height);
     		canvas.onclick = img.onclick;
+    		
+    		// FIXME : NOT_FOUND_ERR: DOM Exception 8 img.onload.li.onmouseover
+		li.onmouseover = function () { li.replaceChild(img, canvas); };
+		li.onmouseout = function () { li.replaceChild(canvas, img); };
     		li.replaceChild(canvas, img);
     	}
+		
     	li.classList.remove('loading');
     	img.style.display = 'block';
     };
