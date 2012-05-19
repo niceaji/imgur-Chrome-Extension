@@ -341,8 +341,8 @@ function setContextMenus() {
 
         evt.addEventListener(evt.EVENT_SUCCESS, function (data) {
 
-            if(evt.type == "capture") {
-                
+            if (evt.type == "capture") {
+
                 if (model.preferences.get('copyoncapture')) {
                     addToClipboard(data.links.original);
                     if (model.preferences.get('taboncapture')) {
@@ -350,7 +350,7 @@ function setContextMenus() {
                     }
                 }
 
-                if(model.preferences.get('taboncapture')) {
+                if (model.preferences.get('taboncapture')) {
                     uploadCompleteTab(data.links.original);
                 } else {
                     uploadCompleteNotification(model.preferences.get('copyoncapture') ? "added to your album and copied to your clipboard" : "added to your album");
@@ -365,7 +365,7 @@ function setContextMenus() {
                     }
                 }
 
-                if(model.preferences.get('tabonrehost')) {
+                if (model.preferences.get('tabonrehost')) {
                     uploadCompleteTab(data.links.original);
                 } else {
                     uploadCompleteNotification(model.preferences.get('copyonrehost') ? "rehosted to your album and copied to your clipboard" : "rehosted to your album");
