@@ -1,7 +1,7 @@
 {
 	"name": "imgur",
 	"description": "Take screenshots, add images to your imgur account and upload images from your desktop using drag and drop.",
-	"version": "1.1.1",
+	"version": "1.2",
 	"icons": { "16": "img/logo.ico", "48": "img/logo_48.png", "128": "img/logo.png" },
 	"permissions": ["contextMenus","tabs","notifications", "http://*/*", "https://*/*", "clipboardWrite", "clipboardRead"],
 	"background_page": "background.html",

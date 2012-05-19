@@ -23,8 +23,8 @@ var port = chrome.extension.connect({ name: "main" }),
 
 var featherEditor = new Aviary.Feather({
     apiKey: 'b073f6881',
+    apiVersion: '2',
     openType: 'lightbox',
-    theme: 'black',
     tools: 'all',
     appendTo: '',
     onSave: function (imageID, newURL) {
@@ -239,25 +239,27 @@ function makeAlbumItem(imageItem) {
     img.id = 'image-' + imageItem.image.hash;
 
     img.onload = function () {
-    	resizeImage(this);
-    	if (imageItem.image.animated && model.preferences.get('freezegifs')) {
-    		var canvas = $$('canvas');
-    		canvas.width = this.width;
-    		canvas.height = this.height;
-    		canvas.style.top = this.style.top;
-    		canvas.style.left = this.style.left;
-    		canvas.id = this.id;
-    		canvas.getContext('2d').drawImage(this, 0, 0, this.width, this.height);
-    		canvas.onclick = img.onclick;
-    		
-    		// FIXME : NOT_FOUND_ERR: DOM Exception 8 img.onload.li.onmouseover
-		li.onmouseover = function () { li.replaceChild(img, canvas); };
-		li.onmouseout = function () { li.replaceChild(canvas, img); };
-    		li.replaceChild(canvas, img);
-    	}
-		
-    	li.classList.remove('loading');
-    	img.style.display = 'block';
+        resizeImage(this);
+        
+        // WTF "animated" is a string?
+        if (imageItem.image.animated == "true" && model.preferences.get('freezegifs')) {
+            var canvas = $$('canvas');
+            canvas.width = this.width;
+            canvas.height = this.height;
+            canvas.style.top = this.style.top;
+            canvas.style.left = this.style.left;
+            canvas.id = this.id;
+            canvas.getContext('2d').drawImage(this, 0, 0, this.width, this.height);
+            canvas.onclick = img.onclick;
+            li.appendChild(canvas);
+            li.onmouseover = function () { canvas.style.display = "none"; img.style.display = "block"; };
+            li.onmouseout = function () { img.style.display = "none"; canvas.style.display = "block"; };
+
+        }
+
+        img.style.display = 'block';
+        li.classList.remove('loading');
+
     };
 
     img.onclick = function () {
@@ -274,12 +276,6 @@ function makeAlbumItem(imageItem) {
     edit.classList.add('image-edit');
     edit.onclick = function (e) {
     	e.preventDefault();
-    	if (!model.preferences.get('shownavairywarning')) {
-    		model.preferences.set('shownavairywarning', true)
-    		if (!confirm("This launches the Aviary image editor. Unfortunately right now they store a copy of your image on their server that you can't delete. If you're OK with that, go right ahead, otherwise cancel")) {
-    			return;
-    		}
-    	}
     	featherEditor.launch({
     		image: 'image-' + imageItem.image.hash,
     		url: imageItem.links.original
