@@ -124,7 +124,7 @@ function Model() {
             if (CurrentlyProcessing < $this.preferences.get('connections')) {
                 CurrentlyProcessing++;
                 var item = queue.splice(queue.length - 1, 1)[0];
-                item.evtD.addEventListener(['EVENT_COMPLETE', 'EVENT_ERROR'], function (e) {
+                item.evtD.addEventListener(['EVENT_COMPLETE', 'EVENT_ERROR', 'EVENT_PROGRESS'], function (e) {
                     CurrentlyProcessing--;
                     // next item
                     if (queue.length !== 0) {
@@ -145,363 +145,410 @@ function Model() {
 
     this.authenticated = new function (model) {
 
-        var $this = this;
+    	var $this = this;
 
-        this.OAuthManager = new function () {
+    	this.OAuthManager = new function () {
 
-            this.Generate = function () {
-                var OAuth = new OAuthSimple('e37b7918f24a70bfc8b4729afb923e9604eb4ab1e', '4ce87676c5d8f13db9982c6dd085b498');
+    		this.Generate = function () {
+    			var OAuth = new OAuthSimple('e37b7918f24a70bfc8b4729afb923e9604eb4ab1e', '4ce87676c5d8f13db9982c6dd085b498');
 
-                var OAuthTokens = DAL.get('OAuthTokens');
-                // Set OAuth tokens from local storage if they are there
-                if (OAuthTokens.access_token) {
-                    OAuth.setTokensAndSecrets({
-                        access_token: OAuthTokens.access_token,
-                        access_secret: OAuthTokens.access_token_secret
-                    });
-                }
-                return OAuth;
-            };
+    			var OAuthTokens = DAL.get('OAuthTokens');
+    			// Set OAuth tokens from local storage if they are there
+    			if (OAuthTokens.access_token) {
+    				OAuth.setTokensAndSecrets({
+    					access_token: OAuthTokens.access_token,
+    					access_secret: OAuthTokens.access_token_secret
+    				});
+    			}
+    			return OAuth;
+    		};
 
-            this.Reset = function () {
-                DAL.set('OAuthTokens.access_token', null);
-                DAL.set('OAuthTokens.access_token_secret', null);
-            }
+    		this.Reset = function () {
+    			DAL.set('OAuthTokens.access_token', null);
+    			DAL.set('OAuthTokens.access_token_secret', null);
+    		}
 
-            this.Set = function (access_token, access_token_secret) {
-                DAL.set('OAuthTokens.access_token', access_token);
-                DAL.set('OAuthTokens.access_token_secret', access_token_secret);
-            };
+    		this.Set = function (access_token, access_token_secret) {
+    			DAL.set('OAuthTokens.access_token', access_token);
+    			DAL.set('OAuthTokens.access_token_secret', access_token_secret);
+    		};
 
-            this.GetAuthStatus = function () {
-                return DAL.get('OAuthTokens.access_token') != null;
-            };
+    		this.GetAuthStatus = function () {
+    			return DAL.get('OAuthTokens.access_token') != null;
+    		};
 
-        }
+    	}
 
-        this.getAccount = function () {
-            return DAL.get('account');
-        };
+    	this.getAccount = function () {
+    		return DAL.get('account');
+    	};
 
-        this.fetchUser = function () {
-            var fetchURL = this.OAuthManager.Generate().sign({
-                path: 'http://api.imgur.com/2/account.json',
-                parameters: {}
-            }).signed_url;
-            var evtD = new EventDispatcher(['EVENT_COMPLETE']),
+    	this.fetchUser = function () {
+    		var fetchURL = this.OAuthManager.Generate().sign({
+    			path: 'https://api.imgur.com/2/account.json',
+    			parameters: {}
+    		}).signed_url;
+    		var evtD = new EventDispatcher(['EVENT_COMPLETE']),
                 xhr = new XMLHttpRequest();
-            xhr.open("GET", fetchURL, true);
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        DAL.set('account', JSON.parse(xhr.responseText).account);
-                        evtD.dispatchEvent(evtD.EVENT_COMPLETE);
-                    } else {
-                        evtD.dispatchEvent('EVENT_ERROR', JSON.parse(xhr.responseText).error.message);
-                    }
-                }
-            };
-            xhr.send(null);
-            return evtD;
-        };
+    		xhr.open("GET", fetchURL, true);
+    		xhr.onreadystatechange = function () {
+    			if (xhr.readyState === 4) {
+    				if (xhr.status === 200) {
+    					DAL.set('account', JSON.parse(xhr.responseText).account);
+    					evtD.dispatchEvent(evtD.EVENT_COMPLETE);
+    				} else {
+    					var message;
+    					try {
+    						message = JSON.parse(xhr.responseText).error.message;
+    					} catch (err) {
+    						message = "Something is wrong with imgur, please try again soon";
+    					}
+    					evtD.dispatchEvent('EVENT_ERROR', message);
+    				}
+    			}
+    		};
+    		xhr.send(null);
+    		return evtD;
+    	};
 
-        this.getAlbums = function () {
-            return DAL.get('albums');
-        };
+    	this.getAlbums = function () {
+    		return DAL.get('albums');
+    	};
 
-        this.fetchUserImages = function () {
-            var fetchURL = this.OAuthManager.Generate().sign({
-                path: 'http://api.imgur.com/2/account/images.json',
-                parameters: {
-                    noalbum: true
-                }
-            }).signed_url;
-            var evtD = new EventDispatcher(['EVENT_COMPLETE']),
+    	this.fetchUserImages = function () {
+    		var fetchURL = this.OAuthManager.Generate().sign({
+    			path: 'https://api.imgur.com/2/account/images.json',
+    			parameters: {
+    				noalbum: true
+    			}
+    		}).signed_url;
+    		var evtD = new EventDispatcher(['EVENT_COMPLETE']),
                 xhr = new XMLHttpRequest();
-            xhr.open("GET", fetchURL, true);
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        evtD.dispatchEvent(evtD.EVENT_COMPLETE, JSON.parse(xhr.responseText).images);
-                    } else {
-                        evtD.dispatchEvent('EVENT_ERROR', JSON.parse(xhr.responseText).error.message);
-                    }
-                }
-            };
-            xhr.send(null);
-            return evtD;
-        };
+    		xhr.open("GET", fetchURL, true);
+    		xhr.onreadystatechange = function () {
+    			if (xhr.readyState === 4) {
+    				if (xhr.status === 200) {
+    					evtD.dispatchEvent(evtD.EVENT_COMPLETE, JSON.parse(xhr.responseText).images);
+    				} else {
+    					var message;
+    					try {
+    						message = JSON.parse(xhr.responseText).error.message;
+    					} catch (err) {
+    						message = "Something is wrong with imgur, please try again soon";
+    					}
+    					evtD.dispatchEvent('EVENT_ERROR', message);
+    				}
+    			}
+    		};
+    		xhr.send(null);
+    		return evtD;
+    	};
 
-        this.fetchAlbums = function () {
+    	this.fetchAlbums = function () {
 
-            var fetchURL = this.OAuthManager.Generate().sign({
-                path: 'http://api.imgur.com/2/account/albums.json',
-                parameters: {}
-            }).signed_url;
-            var evtD = new EventDispatcher(['EVENT_COMPLETE', 'EVENT_ERROR']),
+    		var fetchURL = this.OAuthManager.Generate().sign({
+    			path: 'https://api.imgur.com/2/account/albums.json',
+    			parameters: {}
+    		}).signed_url;
+    		var evtD = new EventDispatcher(['EVENT_COMPLETE', 'EVENT_ERROR']),
                 xhr = new XMLHttpRequest();
-            xhr.open("GET", fetchURL, true);
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        DAL.set('albums', JSON.parse(xhr.responseText).albums);
-                        evtD.dispatchEvent(evtD.EVENT_COMPLETE);
-                    } else if (xhr.status === 404) {
-                        // No albums, but am being given back a 404...
-                        DAL.set('albums', []);
-                        evtD.dispatchEvent(evtD.EVENT_COMPLETE);
-                    } else {
-                        evtD.dispatchEvent('EVENT_ERROR', JSON.parse(xhr.responseText).error.message);
-                    }
-                }
-            };
-            xhr.send(null);
-            return evtD;
-        };
+    		xhr.open("GET", fetchURL, true);
+    		xhr.onreadystatechange = function () {
+    			if (xhr.readyState === 4) {
+    				if (xhr.status === 200) {
+    					DAL.set('albums', JSON.parse(xhr.responseText).albums);
+    					evtD.dispatchEvent(evtD.EVENT_COMPLETE);
+    				} else if (xhr.status === 404) {
+    					// No albums, but am being given back a 404...
+    					DAL.set('albums', []);
+    					evtD.dispatchEvent(evtD.EVENT_COMPLETE);
+    				} else {
+    					var message;
+    					try {
+    						message = JSON.parse(xhr.responseText).error.message;
+    					} catch (err) {
+    						message = "Something is wrong with imgur, please try again soon";
+    					}
+    					evtD.dispatchEvent('EVENT_ERROR', message);
+    				}
+    			}
+    		};
+    		xhr.send(null);
+    		return evtD;
+    	};
 
-        this.fetchAlbumImages = function (ID) {
-            var fetchURL = this.OAuthManager.Generate().sign({
-                path: 'http://api.imgur.com/2/account/albums/' + ID + '.json',
-                parameters: {
-                    count: 100
-                }
-            }).signed_url;
-            var evtD = new EventDispatcher(['EVENT_COMPLETE', 'EVENT_SUCCESS', 'EVENT_ERROR']),
+    	this.fetchAlbumImages = function (ID) {
+    		var fetchURL = this.OAuthManager.Generate().sign({
+    			path: 'https://api.imgur.com/2/account/albums/' + ID + '.json',
+    			parameters: {
+    				count: 100
+    			}
+    		}).signed_url;
+    		var evtD = new EventDispatcher(['EVENT_COMPLETE', 'EVENT_SUCCESS', 'EVENT_ERROR']),
                 xhr = new XMLHttpRequest();
-            xhr.open("GET", fetchURL, true);
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4) {
-                    evtD.dispatchEvent(evtD.EVENT_COMPLETE);
-                    if (xhr.status === 200) {
-                        evtD.dispatchEvent(evtD.EVENT_SUCCESS, JSON.parse(xhr.responseText).albums);
-                    } else {
-                        evtD.dispatchEvent('EVENT_ERROR', JSON.parse(xhr.responseText).error.message);
-                    }
-                }
-            };
-            xhr.send(null);
-            return evtD;
-        };
+    		xhr.open("GET", fetchURL, true);
+    		xhr.onreadystatechange = function () {
+    			if (xhr.readyState === 4) {
+    				evtD.dispatchEvent(evtD.EVENT_COMPLETE);
+    				if (xhr.status === 200) {
+    					evtD.dispatchEvent(evtD.EVENT_SUCCESS, JSON.parse(xhr.responseText).albums);
+    				} else {
+    					var message;
+    					try {
+    						message = JSON.parse(xhr.responseText).error.message;
+    					} catch (err) {
+    						message = "Something is wrong with imgur, please try again soon";
+    					}
+    					evtD.dispatchEvent('EVENT_ERROR', message);
+    				}
+    			}
+    		};
+    		xhr.send(null);
+    		return evtD;
+    	};
 
-        this.makeAlbum = function (title) {
-            var makeData = this.OAuthManager.Generate().sign({
-                path: 'http://api.imgur.com/2/account/albums.json',
-                action: "POST",
-                parameters: {
-                    title: title,
-                    privacy: this.getAccount().default_album_privacy
-                }
-            }).post_data;
+    	this.makeAlbum = function (title) {
+    		var makeData = this.OAuthManager.Generate().sign({
+    			path: 'https://api.imgur.com/2/account/albums.json',
+    			action: "POST",
+    			parameters: {
+    				title: title,
+    				privacy: this.getAccount().default_album_privacy
+    			}
+    		}).post_data;
 
-            var evtD = new EventDispatcher(['EVENT_COMPLETE', 'EVENT_ERROR']),
+    		var evtD = new EventDispatcher(['EVENT_COMPLETE', 'EVENT_ERROR']),
                 xhr = new XMLHttpRequest();
-            xhr.open("POST", "http://api.imgur.com/2/account/albums.json", true);
-            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
+    		xhr.open("POST", "https://api.imgur.com/2/account/albums.json", true);
+    		xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    		xhr.onreadystatechange = function () {
+    			if (xhr.readyState === 4) {
+    				if (xhr.status === 200) {
 
-                        var albums = DAL.get('albums'),
+    					var albums = DAL.get('albums'),
                                 album = JSON.parse(xhr.responseText).albums;
-                        albums.splice(albums.length - 1, 0, album);
-                        evtD.dispatchEvent(evtD.EVENT_COMPLETE, album);
+    					albums.splice(albums.length - 1, 0, album);
+    					evtD.dispatchEvent(evtD.EVENT_COMPLETE, album);
 
-                        DAL.set('albums', albums);
+    					DAL.set('albums', albums);
 
-                    } else {
-                        evtD.dispatchEvent('EVENT_ERROR', JSON.parse(xhr.responseText).error.message);
-                    }
-                }
-            };
-            xhr.send(makeData);
-            return evtD;
-        };
+    				} else {
+    					var message;
+    					try {
+    						message = JSON.parse(xhr.responseText).error.message;
+    					} catch (err) {
+    						message = "Something is wrong with imgur, please try again soon";
+    					}
+    					evtD.dispatchEvent('EVENT_ERROR', message);
+    				}
+    			}
+    		};
+    		xhr.send(makeData);
+    		return evtD;
+    	};
 
-        this.sendImage = function (album, image) {
+    	this.sendImage = function (album, image) {
 
-            var evtD = new EventDispatcher(['EVENT_COMPLETE', 'EVENT_SUCCESS', 'EVENT_ERROR', 'EVENT_PROGRESS']);
-            model.xhrManager.add({
-                handler: function () {
-                    var xhr = new XMLHttpRequest();
-                    var sendImageURL = $this.OAuthManager.Generate().sign({
-                        path: 'http://api.imgur.com/2/account/images.json',
-                        action: "POST",
-                        parameters: {
-                            type: "base64",
-                            image: image
-                        }
-                    }).post_data;
+    		var evtD = new EventDispatcher(['EVENT_COMPLETE', 'EVENT_SUCCESS', 'EVENT_ERROR', 'EVENT_PROGRESS']);
+    		model.xhrManager.add({
+    			handler: function () {
+    				var xhr = new XMLHttpRequest();
+    				var sendImageURL = $this.OAuthManager.Generate().sign({
+    					path: 'https://api.imgur.com/2/account/images.json',
+    					action: "POST",
+    					parameters: {
+    						type: "base64",
+    						image: image
+    					}
+    				}).post_data;
 
-                    xhr.open("POST", "http://api.imgur.com/2/account/images.json", true);
-                    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                    var upload = xhr.upload;
-                    upload.addEventListener("progress", function (ev) {
-                        console.log(ev);
-                        if (ev.lengthComputable) {
-                            console.log(ev.loaded + " / " + ev.total);
-                            evtD.dispatchEvent('EVENT_PROGRESS', { loaded: ev.loaded, total: ev.total });
-                        }
-                    }, false);
+    				xhr.open("POST", "https://api.imgur.com/2/account/images.json", true);
+    				xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    				var upload = xhr.upload;
+    				upload.addEventListener("progress", function (ev) {
+    					if (ev.lengthComputable) {
+    						evtD.dispatchEvent('EVENT_PROGRESS', { loaded: ev.loaded, total: ev.total });
+    					}
+    				}, false);
 
-                    xhr.onreadystatechange = function () {
-                        if (xhr.readyState === 4) {
+    				xhr.onreadystatechange = function () {
+    					if (xhr.readyState === 4) {
 
-                            if (xhr.status === 200) {
+    						if (xhr.status === 200) {
 
-                                var data = JSON.parse(xhr.responseText).images;
+    							var data = JSON.parse(xhr.responseText).images;
 
-                                if (album == '_userAlbum') {
-                                    evtD.dispatchEvent(evtD.EVENT_COMPLETE, data);
-                                    evtD.dispatchEvent(evtD.EVENT_SUCCESS, data);
-                                } else {
+    							if (album == '_userAlbum') {
+    								evtD.dispatchEvent(evtD.EVENT_COMPLETE, data);
+    								evtD.dispatchEvent(evtD.EVENT_SUCCESS, data);
+    							} else {
 
-                                    var accReq = new XMLHttpRequest(),
-                                    accPath = 'http://api.imgur.com/2/account/albums/' + album + '.json';
-                                    var sendImageToAccountURL = $this.OAuthManager.Generate().sign({
-                                        path: accPath,
-                                        action: "POST",
-                                        parameters: {
-                                            add_images: data.image.hash
-                                        }
-                                    }).post_data;
+    								var accReq = new XMLHttpRequest(),
+                                    accPath = 'https://api.imgur.com/2/account/albums/' + album + '.json';
+    								var sendImageToAccountURL = $this.OAuthManager.Generate().sign({
+    									path: accPath,
+    									action: "POST",
+    									parameters: {
+    										add_images: data.image.hash
+    									}
+    								}).post_data;
 
-                                    accReq.open("POST", accPath, true);
-                                    accReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                                    accReq.onreadystatechange = function () {
-                                        if (accReq.readyState == 4) {
+    								accReq.open("POST", accPath, true);
+    								accReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    								accReq.onreadystatechange = function () {
+    									if (accReq.readyState == 4) {
 
-                                            evtD.dispatchEvent(evtD.EVENT_COMPLETE, data);
+    										evtD.dispatchEvent(evtD.EVENT_COMPLETE, data);
 
-                                            if (accReq.status === 200) {
-                                                evtD.dispatchEvent(evtD.EVENT_SUCCESS, data);
-                                            } else {
-                                                evtD.dispatchEvent(evtD.EVENT_ERROR, JSON.parse(accReq.responseText).error.message);
-                                            }
+    										if (accReq.status === 200) {
+    											evtD.dispatchEvent(evtD.EVENT_SUCCESS, data);
+    										} else {
+    											evtD.dispatchEvent(evtD.EVENT_ERROR, JSON.parse(accReq.responseText).error.message);
+    										}
 
 
-                                        }
-                                    };
-                                    accReq.send(sendImageToAccountURL);
+    									}
+    								};
+    								accReq.send(sendImageToAccountURL);
 
-                                }
+    							}
 
-                            } else {
+    						} else {
 
-                                evtD.dispatchEvent(evtD.EVENT_ERROR, JSON.parse(xhr.responseText).error.message);
+    							var message;
+    							try {
+    								message = JSON.parse(xhr.responseText).error.message;
+    							} catch (err) {
+    								message = "Something is wrong with imgur, please try again soon";
+    							}
+    							evtD.dispatchEvent('EVENT_ERROR', message);
 
-                            }
+    						}
 
-                        }
-                    };
-                    xhr.send(sendImageURL);
+    					}
+    				};
+    				xhr.send(sendImageURL);
 
-                },
-                evtD: evtD
-            });
+    			},
+    			evtD: evtD
+    		});
 
-            return evtD;
-        };
+    		return evtD;
+    	};
 
-        this.sendImageURL = function (album, url) {
-            var evtD = new EventDispatcher(['EVENT_COMPLETE', 'EVENT_SUCCESS', 'EVENT_ERROR', 'EVENT_PROGRESS']);
+    	this.sendImageURL = function (album, url) {
+    		var evtD = new EventDispatcher(['EVENT_COMPLETE', 'EVENT_SUCCESS', 'EVENT_ERROR', 'EVENT_PROGRESS']);
 
-            model.xhrManager.add({
-                handler: function () {
-                    var xhr = new XMLHttpRequest();
-                    var sURL = $this.OAuthManager.Generate().sign({
-                        path: 'http://api.imgur.com/2/account/images.json',
-                        action: "POST",
-                        parameters: {
-                            image: url
-                        }
-                    }).post_data;
+    		model.xhrManager.add({
+    			handler: function () {
+    				var xhr = new XMLHttpRequest();
+    				var sURL = $this.OAuthManager.Generate().sign({
+    					path: 'https://api.imgur.com/2/account/images.json',
+    					action: "POST",
+    					parameters: {
+    						image: url
+    					}
+    				}).post_data;
 
-                    xhr.open("POST", "http://api.imgur.com/2/account/images.json", true);
-                    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                    var upload = xhr.upload;
-                    upload.addEventListener("progress", function (ev) {
-                        if (ev.lengthComputable) {
-                            evtD.dispatchEvent('EVENT_PROGRESS', { loaded: ev.loaded, total: ev.total });
-                        }
-                    }, false);
+    				xhr.open("POST", "https://api.imgur.com/2/account/images.json", true);
+    				xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    				var upload = xhr.upload;
+    				upload.addEventListener("progress", function (ev) {
+    					if (ev.lengthComputable) {
+    						evtD.dispatchEvent('EVENT_PROGRESS', { loaded: ev.loaded, total: ev.total });
+    					}
+    				}, false);
 
-                    xhr.onreadystatechange = function () {
+    				xhr.onreadystatechange = function () {
 
-                        if (xhr.readyState === 4) {
+    					if (xhr.readyState === 4) {
 
-                            if (xhr.status === 200) {
-                                var data = JSON.parse(xhr.responseText).images;
+    						if (xhr.status === 200) {
+    							var data = JSON.parse(xhr.responseText).images;
 
-                                if (album == '_userAlbum') {
-                                    evtD.dispatchEvent(evtD.EVENT_COMPLETE, {});
-                                    evtD.dispatchEvent(evtD.EVENT_SUCCESS, data);
-                                } else {
+    							if (album == '_userAlbum') {
+    								evtD.dispatchEvent(evtD.EVENT_COMPLETE, {});
+    								evtD.dispatchEvent(evtD.EVENT_SUCCESS, data);
+    							} else {
 
-                                    var accReq = new XMLHttpRequest();
-                                    var accPath = 'http://api.imgur.com/2/account/albums/' + album + '.json';
-                                    var sendImageToAccountURL = $this.OAuthManager.Generate().sign({
-                                        path: accPath,
-                                        action: "POST",
-                                        parameters: {
-                                            add_images: data.image.hash
-                                        }
-                                    }).post_data;
-                                    accReq.open("POST", accPath, true);
-                                    accReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                                    accReq.onreadystatechange = function () {
-                                        if (accReq.readyState == 4) {
+    								var accReq = new XMLHttpRequest();
+    								var accPath = 'https://api.imgur.com/2/account/albums/' + album + '.json';
+    								var sendImageToAccountURL = $this.OAuthManager.Generate().sign({
+    									path: accPath,
+    									action: "POST",
+    									parameters: {
+    										add_images: data.image.hash
+    									}
+    								}).post_data;
+    								accReq.open("POST", accPath, true);
+    								accReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    								accReq.onreadystatechange = function () {
+    									if (accReq.readyState == 4) {
 
-                                            evtD.dispatchEvent(evtD.EVENT_COMPLETE, {});
+    										evtD.dispatchEvent(evtD.EVENT_COMPLETE, {});
 
-                                            if (accReq.status === 200) {
-                                                evtD.dispatchEvent(evtD.EVENT_SUCCESS, data);
-                                            } else {
-                                                evtD.dispatchEvent(evtD.EVENT_ERROR, JSON.parse(accReq.responseText).error.message);
-                                            }
-                                        }
-                                    };
-                                    accReq.send(sendImageToAccountURL);
+    										if (accReq.status === 200) {
+    											evtD.dispatchEvent(evtD.EVENT_SUCCESS, data);
+    										} else {
+    											evtD.dispatchEvent(evtD.EVENT_ERROR, JSON.parse(accReq.responseText).error.message);
+    										}
+    									}
+    								};
+    								accReq.send(sendImageToAccountURL);
 
-                                }
+    							}
 
-                            } else {
-                                evtD.dispatchEvent('EVENT_ERROR', JSON.parse(xhr.responseText).error.message);
-                            }
-                        }
-                    };
-                    xhr.send(sURL);
-                },
-                evtD: evtD
-            });
+    						} else {
+    							var message;
+    							try {
+    								message = JSON.parse(xhr.responseText).error.message;
+    							} catch (err) {
+    								message = "Something is wrong with imgur, please try again soon";
+    							}
+    							evtD.dispatchEvent('EVENT_ERROR', message);
+    						}
+    					}
+    				};
+    				xhr.send(sURL);
+    			},
+    			evtD: evtD
+    		});
 
-            return evtD;
-        };
+    		return evtD;
+    	};
 
-        this.deleteImage = function (deletehash) {
-            var evtD = new EventDispatcher(['EVENT_COMPLETE', 'EVENT_ERROR']);
-            model.xhrManager.add({
-                handler: function () {
-                    var xhr = new XMLHttpRequest();
-                    xhr.open("GET", "http://api.imgur.com/2/delete/" + deletehash, true);
-                    xhr.onreadystatechange = function () {
-                        if (xhr.readyState === 4) {
+    	this.deleteImage = function (deletehash) {
+    		var evtD = new EventDispatcher(['EVENT_COMPLETE', 'EVENT_ERROR']);
+    		model.xhrManager.add({
+    			handler: function () {
+    				var xhr = new XMLHttpRequest();
+    				xhr.open("GET", "https://api.imgur.com/2/delete/" + deletehash, true);
+    				xhr.onreadystatechange = function () {
+    					if (xhr.readyState === 4) {
 
-                            if (xhr.status === 200) {
-                                evtD.dispatchEvent(evtD.EVENT_COMPLETE);
-                            }
-                            else {
-                                evtD.dispatchEvent('EVENT_ERROR', JSON.parse(xhr.responseText).error.message);
-                            }
+    						if (xhr.status === 200) {
+    							evtD.dispatchEvent(evtD.EVENT_COMPLETE);
+    						}
+    						else {
+    							var message;
+    							try {
+    								message = JSON.parse(xhr.responseText).error.message;
+    							} catch (err) {
+    								message = "Something is wrong with imgur, please try again soon";
+    							}
+    							evtD.dispatchEvent('EVENT_ERROR', message);
 
-                        }
+    						}
 
-                    };
-                    xhr.send(null);
-                },
-                evtD: evtD
-            });
-            return evtD;
-        };
+    					}
+
+    				};
+    				xhr.send(null);
+    			},
+    			evtD: evtD
+    		});
+    		return evtD;
+    	};
 
     } (this);
 
@@ -528,7 +575,7 @@ function Model() {
     		model.xhrManager.add({
     			handler: function () {
     				var xhr = new XMLHttpRequest();
-    				xhr.open("POST", "http://api.imgur.com/2/upload.json", true);
+    				xhr.open("POST", "https://api.imgur.com/2/upload.json", true);
     				xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     				var upload = xhr.upload;
     				upload.addEventListener("progress", function (ev) {
@@ -569,7 +616,7 @@ function Model() {
     		model.xhrManager.add({
     			handler: function () {
     				var xhr = new XMLHttpRequest();
-    				xhr.open("POST", "http://api.imgur.com/2/upload.json", true);
+    				xhr.open("POST", "https://api.imgur.com/2/upload.json", true);
     				xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     				var upload = xhr.upload;
     				upload.addEventListener("progress", function (ev) {
@@ -614,7 +661,7 @@ function Model() {
     		model.xhrManager.add({
     			handler: function () {
     				var xhr = new XMLHttpRequest();
-    				xhr.open("GET", "http://api.imgur.com/2/delete/" + deletehash, true);
+    				xhr.open("GET", "https://api.imgur.com/2/delete/" + deletehash, true);
     				xhr.onreadystatechange = function () {
     					if (xhr.readyState == 4) {
     						if (xhr.responseText) {

@@ -299,6 +299,12 @@ hgroup
 .album ul li a.image-download
 {
     top: 0;
+    left: -999999px;
+}
+
+.album ul li a.image-meme
+{
+    top: 0;
     left: 0;
     border-top-left-radius: 10px;
 }

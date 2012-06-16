@@ -2,7 +2,7 @@
 	"manifest_version" : 2,
 	"name": "imgur",
 	"description": "Take screenshots, add images to your imgur account and upload images from your desktop using drag and drop.",
-	"version": "1.2",
+	"version": "1.1.2",
 	"icons": { 
 		"16": "img/logo.ico",
 		"48": "img/logo_48.png",
@@ -17,7 +17,7 @@
 		"clipboardWrite",
 		"clipboardRead"
 	],
-	"content_security_policy": "script-src 'self' https://feather.aviary.com; object-src 'self'",
+	"content_security_policy": "script-src 'self' https://dme0ih8comzn4.cloudfront.net https://featherservices.aviary.com https://ssl.google-analytics.com; object-src 'self'",
 	"web_accessible_resources": [
 		"img/logo.png"
 	],
@@ -38,8 +38,8 @@
 			"js": ["js/inject/verifier.js"]
 		},
 		{
-			"matches": ["http://*.imgur.com/"],
-			"exclude_matches": ["http://www.imgur.com/"],
+			"matches": ["http://*.imgur.com/","https://*.imgur.com/"],
+			"exclude_matches": ["http://www.imgur.com/","https://www.imgur.com/"],
 			"js": ["js/inject/albumMonitor.js"]
 		}
 	]

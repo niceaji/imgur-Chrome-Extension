@@ -1,7 +1,15 @@
 /// <reference path="utils.js" />
 /// <reference path="model.js" />
 
+var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-249743-23']);
+_gaq.push(['_trackPageview']);
 
+(function () {
+	var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+	ga.src = 'https://ssl.google-analytics.com/ga.js';
+	var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();
 
 var port = chrome.extension.connect({ name: "main" }),
     model = new Model(),
@@ -28,7 +36,6 @@ var featherEditor = new Aviary.Feather({
     tools: 'all',
     appendTo: '',
     onSave: function (imageID, newURL) {
-        featherEditor.close();
         makeURLItem(newURL);
     }
 });
@@ -199,6 +206,7 @@ function makeAlbumItem(imageItem) {
         copy = $$('a'),
         edit = $$('a'),
 		download = $$('a'),
+		meme = $$('a'),
         copyInput = $$('input');
 
     del.href = copy.href = "#";
@@ -212,6 +220,14 @@ function makeAlbumItem(imageItem) {
             del.innerHTML = 'sure?';
         }
 
+    };
+
+    meme.href = copy.href = "#";
+    meme.innerHTML = "make meme";
+    meme.classList.add('image-meme');
+    meme.onclick = function (e) {
+    e.preventDefault();
+		chrome.tabs.create({ url: "http://www.livememe.com/edit?" + imageItem.links.original });
     };
 
     copy.innerHTML = "copy link";
@@ -272,7 +288,7 @@ function makeAlbumItem(imageItem) {
 	li.dataset.deletehash = imageItem.image.deletehash;
 
     edit.href = "#";
-    edit.innerHTML = "edit a copy";
+    edit.innerHTML = "edit copy";
     edit.classList.add('image-edit');
     edit.onclick = function (e) {
     	e.preventDefault();
@@ -302,6 +318,7 @@ function makeAlbumItem(imageItem) {
 
     li.appendChild(copyInput);
     li.appendChild(img);
+	li.appendChild(meme);
     li.appendChild(del);
     li.appendChild(copy);
     li.appendChild(edit);
