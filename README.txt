@@ -12,3 +12,4 @@ Changelog
 * Upgraded to manifest v2 (http://code.google.com/chrome/extensions/manifestVersion.html)
 * Upgraded Aviary editor (Thanks Aviary)
 * Fixed "freeze gifs" (Thanks Divi)
+* Added "make meme" link (Thanks LiveMeme.com)
