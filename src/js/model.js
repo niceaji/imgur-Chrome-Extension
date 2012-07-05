@@ -1,6 +1,3 @@
-/// <reference path="utils.js" />
-/// <reference path="chrome_ex_oauthsimple.js" />
-
 function Model() {
 
     /**************************

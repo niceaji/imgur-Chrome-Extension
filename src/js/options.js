@@ -1,6 +1,3 @@
-/// <reference path="utils.js" />
-/// <reference path="model.js" />
-
 var port = chrome.extension.connect({ name: "options" }),
     model = new Model();
 

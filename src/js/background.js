@@ -1,6 +1,3 @@
-/// <reference path="utils.js" />
-/// <reference path="model.js" />
-
 var model = new Model(),
     portMessenger = new PortMessenger(),
     requestMessenger = new RequestMessenger();

@@ -1,6 +1,3 @@
-/// <reference path="utils.js" />
-/// <reference path="model.js" />
-
 var _gaq = _gaq || [];
 _gaq.push(['_setAccount', 'UA-249743-23']);
 _gaq.push(['_trackPageview']);
@@ -503,6 +500,7 @@ window.onload = function () {
 	EStatusBarLink = EStatusBar.querySelectorAll('span')[0];
 
 	document.documentElement.ondrop = function (e) {
+        e.preventDefault();
 		uploadFiles(e);
 		hideStatusBar();
 	};
