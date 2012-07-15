@@ -7,6 +7,10 @@ Licensed under BSD License
 Changelog
 ---------
 
+1.1.3
+
+* Fixed Drag and Drop for Mac
+
 1.1.2
 
 * Upgraded to manifest v2 (http://code.google.com/chrome/extensions/manifestVersion.html)
