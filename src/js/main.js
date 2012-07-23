@@ -267,10 +267,12 @@ function makeAlbumItem(imageItem) {
             li.appendChild(canvas);
             li.onmouseover = function () { canvas.style.display = "none"; img.style.display = "block"; };
             li.onmouseout = function () { img.style.display = "none"; canvas.style.display = "block"; };
-
         }
-
-        img.style.display = 'block';
+		else {
+			// Show the img only for non animated image. Your CPU will not cry anymore.
+			img.style.display = 'block';
+		}
+        
         li.classList.remove('loading');
 
     };
@@ -611,4 +613,3 @@ window.onload = function () {
 	changeAlbum(model.currentAlbum.get());
 
 };
-
