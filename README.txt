@@ -4,6 +4,11 @@ imgur Chrome Extension
 Copyright (C) 2012, William Parry
 Licensed under BSD License
 
+Developers
+----------
+
+Please refer to the wiki for changes: https://github.com/williamparry/imgur-Chrome-Extension/wiki
+
 Changelog
 ---------
 
